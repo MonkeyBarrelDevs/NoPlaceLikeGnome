@@ -6,8 +6,6 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     private float moveSpeed;
-    [Range(0f, 1f)]
-    public float stopSpeed;
     private float currentSpeed;
     private Rigidbody rb;
 
