@@ -8,7 +8,7 @@ public class GameController : MonoBehaviour
     public int water = 0;
     public int nutrients = 0;
     public int seeds = 0;
-    public Boolean hasBackpack = false;
+    public bool hasBackpack = false;
 
     // Start is called before the first frame update
     void Start()

@@ -14,7 +14,7 @@ public class CollectibleDropoff : MonoBehaviour
 
     [SerializeField] CollectibleType collectibleType;
     GameController gameController;
-    Boolean triggered = false;
+    bool triggered, hasSeed, hasNutrients, hasWater, readyToGrow = false;
 
      void FindReferences()
     {
@@ -73,28 +73,33 @@ public class CollectibleDropoff : MonoBehaviour
                 switch (collectibleType)
                 {
                     case CollectibleType.Water:
-                        if(gameController.getWater() > 0)
+                        if(gameController.getWater() > 0 && !hasNutrients && hasSeed)
                         {
                             ResolveDropoff();
                             gameController.setWater(gameController.getWater() - 1);
                         }
                         break;
                     case CollectibleType.Nutrients:
-                        if(gameController.getNutrients() > 0)
+                        if(gameController.getNutrients() > 0 && !hasNutrients && hasSeed)
                         {
                             ResolveDropoff();
                             gameController.setNutrients(gameController.getNutrients() - 1);
+                            hasNutrients = true;
                         }
                         break;
                     case CollectibleType.Seeds:
-                        if(gameController.getSeeds() > 0)
+                        if(gameController.getSeeds() > 0 && !hasSeed)
                         {
                             ResolveDropoff();
                             gameController.setSeeds(gameController.getSeeds() - 1);
+                            hasSeed = true;
                         }
                         break;
                 }
             }
         }
+
+        if(hasSeed && hasNutrients && hasWater)
+            readyToGrow = true;
     }
 }
