@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Shader
-  m_Shader: {fileID: -6465566751694194690, guid: 5b715d34fa294bb49a51b4e325ecb56e, type: 3}
+  m_Name: 2DLight
+  m_Shader: {fileID: -6465566751694194690, guid: 8c6ecc38baa10b24db856855f36151d7, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -20,7 +20,7 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _SampleTexture2D_b5e80b96fb7641fcbaa2650997a2fb8e_Texture_1:
+    - _SampleTexture2D_2db565c4eee3462c8e240d9ef01dc5d0_Texture_1:
         m_Texture: {fileID: 2800000, guid: 3e2c7bbbdbfb51c4f9e4ae2bb450943f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
