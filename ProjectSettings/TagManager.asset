@@ -41,3 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Ground
+    uniqueID: 3771743909
+    locked: 0
+  - name: Grass
+    uniqueID: 3528773271
+    locked: 0
+  - name: Village
+    uniqueID: 3741505189
+    locked: 0
+  - name: Gnome
+    uniqueID: 2034799305
+    locked: 0
