@@ -6,7 +6,6 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     private float moveSpeed;
-    private float currentSpeed;
     private Rigidbody rb;
 
     Vector3 movement;
@@ -25,6 +24,8 @@ public class PlayerController : MonoBehaviour
     {
         x = transform.position.x;
         z = transform.position.z;
+
+        // Movement
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.z = Input.GetAxisRaw("Vertical");
         movement.y = 0;

@@ -77,6 +77,7 @@ public class CollectibleDropoff : MonoBehaviour
                         {
                             ResolveDropoff();
                             gameController.setWater(gameController.getWater() - 1);
+                            hasWater = true;
                         }
                         break;
                     case CollectibleType.Nutrients:
