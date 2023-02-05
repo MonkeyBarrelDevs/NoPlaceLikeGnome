@@ -2,8 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class WorldGenerator : MonoBehaviour {
+
+    public TileRenderer tileRenderer;
+    //public Tile dirt;
 
     private WorldState worldState;
 
@@ -13,10 +17,11 @@ public class WorldGenerator : MonoBehaviour {
     public int westRenderDistance = 1;
 
     public GameObject room;
+    public GameObject blue;
 
     public Vector2 distanceOffset;
 
-    public Dictionary<(int, int), GameObject> renderedRooms;
+    public Dictionary<(int, int), WorldState.Room> renderedRooms;
 
     public PlayerController player;
 
@@ -39,8 +44,10 @@ public class WorldGenerator : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        currentRoomX = (int)((Math.Abs(player.x) + 5) / 10) * Math.Sign(player.x);
-        currentRoomZ = (int)((Math.Abs(player.z) + 5) / 10) * Math.Sign(player.z);
+        currentRoomX = (int)(player.x / 20) - (player.x < 0 ? 1 : 0);
+        currentRoomZ = (int)(player.z / 20) - (player.z < 0 ? 1 : 0);
+        //if (player.x < 0) currentRoomX--;
+        //if (player.z < 0) currentRoomZ--;
         //Debug.Log("Current room: " + currentRoomX + ", " + currentRoomZ + ".");
         RenderRooms();
         //Debug.Log(worldState.GetCurrentRoomX() + ", y: " + worldState.GetCurrentRoomY());
@@ -56,9 +63,11 @@ public class WorldGenerator : MonoBehaviour {
             return;
         }
 
-        WorldState.Room newRoom = new(newRoomOffsetX, newRoomOffsetY, worldState.worldSeedXOffset, worldState.worldSeedZOffset);
-        worldState.AddRoom(newRoom);
-        Instantiate(room, new Vector3(newRoomOffsetX * distanceOffset.x, 0, newRoomOffsetY * distanceOffset.y), new Quaternion(0, 180, 0, 0));
+        GameObject newRoomObject = Instantiate(room, new Vector3(newRoomOffsetX * distanceOffset.x, 0, newRoomOffsetY * distanceOffset.y), new Quaternion(0, 180, 0, 0));
+        //WorldState.Room newRoom = new(newRoomOffsetX, newRoomOffsetY, worldState.worldSeedXOffset, worldState.worldSeedZOffset, newRoomObject, blue);
+        //worldState.AddRoom(newRoom);
+        //newRoomObject.AddComponent();
+        //newRoomObject.name = "Room[" + newRoom.roomOffsetX + "][" + newRoom.roomOffsetY + "]";
     }
 
     public void RenderRooms() {
@@ -68,63 +77,40 @@ public class WorldGenerator : MonoBehaviour {
                 if (renderedRooms.ContainsKey((currentRoomX + x, currentRoomZ + z))) {
                     continue;
                 }
+                
+                //GameObject renderedRoom = Instantiate(room, new Vector3((currentRoomX + x) * distanceOffset.x, 0, (currentRoomZ + z) * distanceOffset.y), new Quaternion(0, 180, 0, 0));
+                
 
                 if (!worldState.RoomExists(currentRoomX + x, currentRoomZ + z)) {
                     WorldState.Room newRoom = new(currentRoomX + x, currentRoomZ + z, worldState.worldSeedXOffset, worldState.worldSeedZOffset);
                     worldState.AddRoom(newRoom);
                 }
-
-                GameObject renderedRoom = Instantiate(room, new Vector3((currentRoomX + x) * distanceOffset.x, 0, (currentRoomZ + z) * distanceOffset.y), new Quaternion(0, 180, 0, 0));
-                renderedRooms.TryAdd((currentRoomX + x, currentRoomZ + z), renderedRoom);
-
+                WorldState.Room currentRoom = worldState.GetRoom(currentRoomX + x, currentRoomZ + z);
+                renderedRooms.TryAdd((currentRoomX + x, currentRoomZ + z), currentRoom); // Write extension method TryGetRoom
+                tileRenderer.FillRoomGround(currentRoomX + x, currentRoomZ + z, currentRoom.grassNoise);
+                //worldState.GetRoom(currentRoomX + x, currentRoomZ + z).RenderRoomProps();
             }
         }
 
-        foreach (KeyValuePair<(int, int), GameObject> renderedRoom in renderedRooms) {
+        foreach (KeyValuePair<(int, int), WorldState.Room> renderedRoom in renderedRooms) {
             if (renderedRoom.Key.Item1 > currentRoomX && Math.Abs(renderedRoom.Key.Item1 - currentRoomX) > eastRenderDistance) {
-                Destroy(renderedRoom.Value);
+                //Destroy(renderedRoom.Value);
                 renderedRooms.Remove(renderedRoom.Key);
+                tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
             } else if (renderedRoom.Key.Item1 < currentRoomX && Math.Abs(renderedRoom.Key.Item1 - currentRoomX) > westRenderDistance) {
-                Destroy(renderedRoom.Value);
+                //Destroy(renderedRoom.Value);
                 renderedRooms.Remove(renderedRoom.Key);
+                tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
             } else if (renderedRoom.Key.Item2 < currentRoomZ && Math.Abs(renderedRoom.Key.Item2 - currentRoomZ) > southRenderDistance) {
-                Destroy(renderedRoom.Value);
+                //Destroy(renderedRoom.Value);
                 renderedRooms.Remove(renderedRoom.Key);
+                tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
             } else if (renderedRoom.Key.Item2 > currentRoomZ && Math.Abs(renderedRoom.Key.Item2 - currentRoomZ) > northRenderDistance) {
-                Destroy(renderedRoom.Value);
+                //Destroy(renderedRoom.Value);
                 renderedRooms.Remove(renderedRoom.Key);
-            }
-
-            /*if (Math.Abs(renderedRoom.Key.Item1 - currentRoomX) >= southRenderDistance + northRenderDistance || Math.Abs(renderedRoom.Key.Item2 - currentRoomZ) >= eastRenderDistance + westRenderDistance) {
-                Destroy(renderedRoom.Value);
-                renderedRooms.Remove(renderedRoom.Key);
-            }*/
-        }
-
-
-        /*for (int z = -1; z < 4; z++) {
-            for (int x = -2; x < 3; x++) {
-                if (renderedRooms.ContainsKey((currentRoomX + x, currentRoomZ + z))) {
-                    continue;
-                }
-
-                if (!worldState.RoomExists(currentRoomX + x, currentRoomZ + z)) { 
-                    WorldState.Room newRoom = new(currentRoomX + x, currentRoomZ + z);
-                    worldState.AddRoom(newRoom);
-                }
-
-                GameObject renderedRoom = Instantiate(room, new Vector3((currentRoomX + x) * distanceOffset.x, 0, (currentRoomZ + z) * distanceOffset.y), new Quaternion(0, 180, 0, 0));
-                renderedRooms.TryAdd((currentRoomX + x, currentRoomZ + z), renderedRoom);
-
+                tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
             }
         }
-
-        foreach (KeyValuePair<(int, int), GameObject> renderedRoom in renderedRooms) {
-            if (Math.Abs(renderedRoom.Key.Item1 - currentRoomX) > 2 || Math.Abs(renderedRoom.Key.Item2 - currentRoomZ) > 3) {
-                Destroy(renderedRoom.Value);
-                renderedRooms.Remove(renderedRoom.Key);
-            }
-        }*/
     }
 
     public void UpdateCurrentRoom(int directionID) {

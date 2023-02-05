@@ -1,6 +1,8 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class WorldState
 {
@@ -9,8 +11,11 @@ public class WorldState
         public int roomOffsetX;
         public int roomOffsetY; // TODO: refactor to z
         public float[,] grassNoise;
+        public Tilemap tilemap;
+        public HashSet<GameObject> roomProps;
 
         public Room(int offsetX, int offsetY, int worldSeedXOffset, int worldSeedZOffset) {
+            roomProps = new();
             grassNoise = new float[20, 20];
             roomOffsetX = offsetX;
             roomOffsetY = offsetY;
@@ -18,25 +23,26 @@ public class WorldState
         }
 
         private void GenerateGrassNoise(int worldSeedXOffset, int worldSeedZOffset) {
+            //Tile dirt = GameObject.Find("WorldGenerator").GetComponent<WorldGenerator>().dirt;
             float roomStartX = roomOffsetX * 20 + worldSeedXOffset;
             float roomStartZ = roomOffsetY * 20 + worldSeedZOffset;
 
             for (int x = 0; x < 20; x++) {
                 for (int z = 0; z < 20; z++) {
-                    float grassNoiseValue = Mathf.PerlinNoise((float)(roomStartX + x)/200000, (float)(roomStartZ + z)/200000);
-                    //Debug.Log(grassNoiseValue);
+                    float grassNoiseValue = Mathf.PerlinNoise((float)(roomStartX + x) / 2, (float)(roomStartZ + z) / 2);
                     grassNoise[x, z] = grassNoiseValue;
                 }
             }
-
-            /*Debug.Log("For room x" + roomOffsetX + ", z" + roomOffsetY);
-            for (int x = 0; x < 20; x++) {
-                for (int z = 0; z < 20; z++) {
-                    Debug.Log(grassNoise[x, z]);
-                }
-                Debug.Log("\n");
-            }*/
         }
+
+        /*private void GenerateRoomProps(GameObject blue) {
+            System.Random rand = new();
+            for (int i = 0; i < rand.Next(3); i++) {
+                GameObject roomProp = GameObject.Instantiate(blue, new Vector3(roomOffsetX * 10 + rand.Next(-5, 5), 0, roomOffsetY * 10 + rand.Next(15)), new Quaternion(0, 180, 0, 0), roomObject.transform);
+                roomProps.Add(roomProp);
+            }
+        }*/
+
     }
 
     public static Dictionary<(int, int), Room> rooms;
