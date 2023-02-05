@@ -1,16 +1,27 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using UnityEngine;
+using System.Runtime.CompilerServices; 
 using UnityEngine.Tilemaps;
 
 public class WorldGenerator : MonoBehaviour {
 
+    enum CollectibleType {
+        Water,
+        Nutrients,
+        Seeds
+    }
+
+    public GameObject water;
+    public GameObject nutrients;
+
     public TileRenderer tileRenderer;
-    //public Tile dirt;
 
     private WorldState worldState;
 
+    // Room render distances; renders 1 room out from the current room in each cardinal direction by default.
     public int northRenderDistance = 1;
     public int southRenderDistance = 1;
     public int eastRenderDistance = 1;
@@ -22,6 +33,8 @@ public class WorldGenerator : MonoBehaviour {
     public Vector2 distanceOffset;
 
     public Dictionary<(int, int), WorldState.Room> renderedRooms;
+    // TODO: Naive approach. Make object pool here.
+    public Dictionary<WorldState.Room, List<GameObject>> renderedRoomProps;
 
     public PlayerController player;
 
@@ -29,6 +42,8 @@ public class WorldGenerator : MonoBehaviour {
     public int currentRoomZ;
 
     public int worldSeed;
+    public int minimumRoomResources;
+    public int maximumRoomResources;
     // Start is called before the first frame update
     void Start()
     {
@@ -36,6 +51,7 @@ public class WorldGenerator : MonoBehaviour {
         currentRoomZ = 0;
         player = FindObjectOfType<PlayerController>();
         renderedRooms = new();
+        renderedRoomProps = new();
         worldState = new(worldSeed);
         //renderedRooms.Add((0, 0), GameObject.Find("Room"));
         //RenderRooms();
@@ -51,23 +67,6 @@ public class WorldGenerator : MonoBehaviour {
         //Debug.Log("Current room: " + currentRoomX + ", " + currentRoomZ + ".");
         RenderRooms();
         //Debug.Log(worldState.GetCurrentRoomX() + ", y: " + worldState.GetCurrentRoomY());
-    }
-
-    public void GenerateRoom(int directionID) {
-        Debug.Log("Trying to generate a room");
-        int newRoomOffsetX = GetNewRoomOffsetXFromID(directionID);
-        int newRoomOffsetY = GetNewRoomOffsetYFromID(directionID);
-        worldState.SetCurrentRoom(newRoomOffsetX, newRoomOffsetY);
-
-        if (worldState.RoomExists(newRoomOffsetX, newRoomOffsetY)) {
-            return;
-        }
-
-        GameObject newRoomObject = Instantiate(room, new Vector3(newRoomOffsetX * distanceOffset.x, 0, newRoomOffsetY * distanceOffset.y), new Quaternion(0, 180, 0, 0));
-        //WorldState.Room newRoom = new(newRoomOffsetX, newRoomOffsetY, worldState.worldSeedXOffset, worldState.worldSeedZOffset, newRoomObject, blue);
-        //worldState.AddRoom(newRoom);
-        //newRoomObject.AddComponent();
-        //newRoomObject.name = "Room[" + newRoom.roomOffsetX + "][" + newRoom.roomOffsetY + "]";
     }
 
     public void RenderRooms() {
@@ -88,28 +87,52 @@ public class WorldGenerator : MonoBehaviour {
                 WorldState.Room currentRoom = worldState.GetRoom(currentRoomX + x, currentRoomZ + z);
                 renderedRooms.TryAdd((currentRoomX + x, currentRoomZ + z), currentRoom); // Write extension method TryGetRoom
                 tileRenderer.FillRoomGround(currentRoomX + x, currentRoomZ + z, currentRoom.grassNoise);
-                //worldState.GetRoom(currentRoomX + x, currentRoomZ + z).RenderRoomProps();
+
+                renderedRoomProps.TryAdd(currentRoom, new List<GameObject>());
+                foreach ((CollectibleType, int, int) resource in currentRoom.roomProps) {
+                    switch (resource.Item1) {
+                        case CollectibleType.Nutrients:
+                            // Instantiates the new resource and adds it to the list of rendered room props for the current room.
+                            renderedRoomProps[currentRoom].Add(Instantiate(nutrients, new Vector3(resource.Item2, 0, resource.Item3), new Quaternion(0, 180, 0, 0)));
+                            break;
+                        case CollectibleType.Water:
+                            // Instantiates the new resource and adds it to the list of rendered room props for the current room.
+                            renderedRoomProps[currentRoom].Add(Instantiate(water, new Vector3(resource.Item2, 0, resource.Item3), new Quaternion(0, 180, 0, 0)));
+                            break;
+                    }
+                }
             }
         }
 
         foreach (KeyValuePair<(int, int), WorldState.Room> renderedRoom in renderedRooms) {
             if (renderedRoom.Key.Item1 > currentRoomX && Math.Abs(renderedRoom.Key.Item1 - currentRoomX) > eastRenderDistance) {
                 //Destroy(renderedRoom.Value);
-                renderedRooms.Remove(renderedRoom.Key);
+                ClearRoomResources(renderedRoom.Value);
                 tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
+                renderedRooms.Remove(renderedRoom.Key);
             } else if (renderedRoom.Key.Item1 < currentRoomX && Math.Abs(renderedRoom.Key.Item1 - currentRoomX) > westRenderDistance) {
                 //Destroy(renderedRoom.Value);
-                renderedRooms.Remove(renderedRoom.Key);
+                ClearRoomResources(renderedRoom.Value);
                 tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
+                renderedRooms.Remove(renderedRoom.Key);
             } else if (renderedRoom.Key.Item2 < currentRoomZ && Math.Abs(renderedRoom.Key.Item2 - currentRoomZ) > southRenderDistance) {
                 //Destroy(renderedRoom.Value);
-                renderedRooms.Remove(renderedRoom.Key);
+                ClearRoomResources(renderedRoom.Value);
                 tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
+                renderedRooms.Remove(renderedRoom.Key);
             } else if (renderedRoom.Key.Item2 > currentRoomZ && Math.Abs(renderedRoom.Key.Item2 - currentRoomZ) > northRenderDistance) {
                 //Destroy(renderedRoom.Value);
-                renderedRooms.Remove(renderedRoom.Key);
+                ClearRoomResources(renderedRoom.Value);
                 tileRenderer.ClearRoomTiles(renderedRoom.Key.Item1, renderedRoom.Key.Item2);
+                renderedRooms.Remove(renderedRoom.Key);
             }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ClearRoomResources(WorldState.Room room) {
+        foreach (GameObject roomProp in renderedRoomProps[room]) {
+            Destroy(roomProp);
         }
     }
 
