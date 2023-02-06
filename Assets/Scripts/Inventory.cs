@@ -64,22 +64,22 @@ public class Inventory : MonoBehaviour
             case Collectible.CollectibleType.None:
                 return false;
             case Collectible.CollectibleType.Water:
-                Instantiate(WaterObject, transform.position, Quaternion.identity);
+                Instantiate(WaterObject, pickupCenter.transform.position, Quaternion.identity);
                 break;
             case Collectible.CollectibleType.Nutrients:
-                Instantiate(NutrientObject, transform.position, Quaternion.identity);
+                Instantiate(NutrientObject, pickupCenter.transform.position, Quaternion.identity);
                 break;
             case Collectible.CollectibleType.SpeedSeed:
-                Instantiate(SpeedSeedObject, transform.position, Quaternion.identity);
+                Instantiate(SpeedSeedObject, pickupCenter.transform.position, Quaternion.identity);
                 break;
             case Collectible.CollectibleType.BackpackSeed:
-                Instantiate(BackpackSeedObject, transform.position, Quaternion.identity);
+                Instantiate(BackpackSeedObject, pickupCenter.transform.position, Quaternion.identity);
                 break;
             case Collectible.CollectibleType.NutrientSeed:
-                Instantiate(NutrientsSeedObject, transform.position, Quaternion.identity);
+                Instantiate(NutrientsSeedObject, pickupCenter.transform.position, Quaternion.identity);
                 break;
             case Collectible.CollectibleType.WaterSeed:
-                Instantiate(WaterSeedObject, transform.position, Quaternion.identity);
+                Instantiate(WaterSeedObject, pickupCenter.transform.position, Quaternion.identity);
                 break;
         }
 
