@@ -170,7 +170,9 @@ MonoBehaviour:
   tilemap: {fileID: 1157145378}
   dirtTile: {fileID: 11400000, guid: 90cce43b459aa9b45a1d32077e3e696d, type: 2}
   grassTile: {fileID: 11400000, guid: 19746579d0e26274bab8195ebabdc4d0, type: 2}
+  grassDetailTile: {fileID: 0}
   grassiness: 0.472
+  grassDetail: 0
 --- !u!1 &250826924 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5179935632836032331, guid: 7c0cdfaf1b0cd7149937208b88183f6f, type: 3}
@@ -304,6 +306,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 349c2c8613828824fb9dce2d3ce80e42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  water: {fileID: 4899339371524131219, guid: 00205979902742945adb2f25797d78a5, type: 3}
+  nutrients: {fileID: 109287165459278127, guid: 7caf23dc50fc45b4da3e4976ec9a4f98, type: 3}
   tileRenderer: {fileID: 168736376}
   northRenderDistance: 1
   southRenderDistance: 1
@@ -316,6 +320,8 @@ MonoBehaviour:
   currentRoomX: 0
   currentRoomZ: 0
   worldSeed: 0
+  minimumRoomResources: 1
+  maximumRoomResources: 4
 --- !u!4 &763827339
 Transform:
   m_ObjectHideFlags: 0
