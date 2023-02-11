@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,24 +6,51 @@ using UnityEngine.Events;
 
 public class TimeHandler : MonoBehaviour
 {
+    private float secondsSinceLastTick;
+    private int gameMinutesPerTick;
+    private DateTime dateTime;
 
+    [Header("Time Controls")]
     [SerializeField]
-    private int realMinuteDayLength;
+    private int startMinute = 0, startHour = 6, startDay = 1, startWeek = 1, startYear = 1;
+    [SerializeField]
+    private int realMinuteDayLength = 10;
+    [SerializeField]
+    private int secondsBetweenTicks = 1;
 
     public static UnityAction<DateTime> OnTimeChanged;
     // Start is called before the first frame update
 
+    private void Awake() {
+            // 1440 minutes in a day
+            // 60r seconds in a day real
+        int gameSecondsPerRealSecond = 86_400 / (realMinuteDayLength * 60); // Game seconds per 1 real second 
+        gameMinutesPerTick = (gameSecondsPerRealSecond * secondsBetweenTicks) / 60; // Game seconds per tick
 
+        dateTime = new(startDay, startWeek, startYear, startHour, startMinute);
+    }
 
-    void Start()
-    {
+    void Start() {
         
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
+    void Update() {
+        secondsSinceLastTick += Time.deltaTime;
+
+        if (secondsSinceLastTick >= secondsBetweenTicks) {
+            secondsSinceLastTick = 0;
+            Tick();
+        }
+    }
+
+    private void Tick() {
+        AdvanceTime();
+        Debug.Log(dateTime.ToString());
+    }
+
+    private void AdvanceTime() {
+        dateTime.AdvanceMinutes(gameMinutesPerTick);
     }
 
     public struct DateTime {
@@ -92,7 +120,7 @@ public class TimeHandler : MonoBehaviour
         #region Time Management
         public void AdvanceMinutes(int minutesToAdvance) {
             if (minutes + minutesToAdvance >= 60) {
-                int hoursAdvanced = minutes + minutesToAdvance / 60;
+                int hoursAdvanced = (minutes + minutesToAdvance) / 60;
                 minutes = (minutes + minutesToAdvance) % 60;
                 AdvanceHour(hoursAdvanced);
             } else {
@@ -102,9 +130,10 @@ public class TimeHandler : MonoBehaviour
 
         public void AdvanceHour(int hoursToAdvance) {
             if (hour + hoursToAdvance >= 24) {
+                AdvanceDay();
                 hour = hour + hoursToAdvance - 24;
             } else {
-                hour++;
+                hour += hoursToAdvance;
             }
         }
 
@@ -122,7 +151,7 @@ public class TimeHandler : MonoBehaviour
 
         #region Strings
         public override string ToString() {
-            return $"Day: {day}, Time: {TimeToString()}, Week: {week}, Year: {year}";
+            return $"Time: {TimeToString()}, Weekday: {weekday}, Day: {day}, Week: {week}, Year: {year}";
         }
 
         public string TimeToString() {
