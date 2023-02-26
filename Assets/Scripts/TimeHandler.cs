@@ -10,31 +10,34 @@ public class TimeHandler : MonoBehaviour
     private int gameMinutesPerTick;
     private DateTime dateTime;
 
-    [Header("Time Controls")]
     [SerializeField]
     private int startMinute = 0, startHour = 6, startDay = 1, startWeek = 1, startYear = 1;
+
+    [Header("Time Controls")]
     [SerializeField]
     private int realMinuteDayLength = 10;
     [SerializeField]
     private int secondsBetweenTicks = 1;
 
+    [SerializeField] [Range(0, 23)]
+    private int morningLowerBound, morningUpperBound;
+    [SerializeField] [Range(0, 23)]
+    private int afternoonLowerBound, afternoonUpperBound;
+    [SerializeField] [Range(0, 23)]
+    private int eveningLowerBound, eveningUpperBound;
+
     public static UnityAction<DateTime> OnTimeChanged;
-    // Start is called before the first frame update
+    public static UnityAction<DateTime> OnDayChanged;
 
     private void Awake() {
-            // 1440 minutes in a day
-            // 60r seconds in a day real
         int gameSecondsPerRealSecond = 86_400 / (realMinuteDayLength * 60); // Game seconds per 1 real second 
         gameMinutesPerTick = (gameSecondsPerRealSecond * secondsBetweenTicks) / 60; // Game seconds per tick
 
-        dateTime = new(startDay, startWeek, startYear, startHour, startMinute);
+        dateTime = new(startDay, startWeek, startYear, startHour, startMinute,
+                       morningLowerBound, morningUpperBound, afternoonLowerBound, afternoonUpperBound, eveningLowerBound, eveningUpperBound);
     }
 
-    void Start() {
-        
-    }
-
-    // Update is called once per frame
+    void Start() { }
     void Update() {
         secondsSinceLastTick += Time.deltaTime;
 
@@ -51,18 +54,25 @@ public class TimeHandler : MonoBehaviour
 
     private void AdvanceTime() {
         dateTime.AdvanceMinutes(gameMinutesPerTick);
+        OnTimeChanged?.Invoke(dateTime);
+
+        if (dateTime.IsNight()) {
+            dateTime.AdvanceToTime(6, 0); // Advance to 6AM
+            OnDayChanged?.Invoke(dateTime);
+        }
+    }
+
+    public void SkipDay() {
+        dateTime.AdvanceToTime(6, 0);
+        OnDayChanged?.Invoke(dateTime);
     }
 
     public struct DateTime {
         #region Serialized Time Controls
         // Morning starts at lower bound and ends at upper bound.
-        [SerializeField]
         private int morningLowerBound, morningUpperBound;
 
-        [SerializeField]
         private int afternoonLowerBound, afternoonUpperBound;
-
-        [SerializeField]
         private int eveningLowerBound, eveningUpperBound;
         #endregion
 
@@ -81,7 +91,10 @@ public class TimeHandler : MonoBehaviour
         public int Minute => minutes;
         #endregion
 
-        public DateTime(int day, int week, int year, int hour, int minutes) {
+        #region Constructors
+        public DateTime(int day, int week, int year, int hour, int minutes, 
+                        int morningLower, int morningUpper, int afternoonLower, int afternoonUpper, int eveningLower, int eveningUpper) {
+
             this.day = day;
             this.week = week;
             this.year = (year > 0) ? year : 1; // Year semantics for this game starts at year 1; the ternary here guards against a year 0
@@ -91,33 +104,39 @@ public class TimeHandler : MonoBehaviour
 
             // Day partition defaults, because for some reaason I am writing this on C#9.
             // Morning: 6AM-12PM
-            morningLowerBound = 6;
-            morningUpperBound = 12;
+            this.morningLowerBound = morningLower;
+            morningUpperBound = morningUpper;
             // Afternoon: 12PM-5PM
-            afternoonLowerBound = 12;
-            afternoonUpperBound = 5;
+            afternoonLowerBound = afternoonLower;
+            afternoonUpperBound = afternoonUpper;
             // Evening: 5PM - 10PM
-            eveningLowerBound =  5;
-            eveningUpperBound = 10;
+            eveningLowerBound =  eveningLower;
+            eveningUpperBound = eveningUpper;
         }
-
-        public enum Days { 
-            Sunday = 1,
-            Monday = 2,
-            Tuesday = 3,
-            Wednesday = 4,
-            Thursday = 5,
-            Friday = 6,
-            Saturday = 7
-        }
+        #endregion
 
         #region Boolean Checks
         public bool IsMorning() { return hour >= morningLowerBound && hour < morningUpperBound; }
         public bool IsAfternoon() { return hour >= afternoonLowerBound && hour < afternoonUpperBound; }
         public bool IsEvening() { return hour >= eveningLowerBound && hour < eveningUpperBound; }
+        public bool IsNight() { return hour >= eveningUpperBound; }
         #endregion
 
         #region Time Management
+        public void AdvanceToTime(int hour, int minutes) {
+            if ((hour < 0 || hour > 23) || (minutes < 0 || minutes > 59)) {
+                Debug.Log("Tried to advance to an invalid time!");
+                return;
+            }
+
+            if (hour < this.hour || (hour == this.hour && minutes <= this.minutes)) {
+                AdvanceDay();
+            }
+
+            this.hour = hour;
+            this.minutes = minutes;
+        }
+
         public void AdvanceMinutes(int minutesToAdvance) {
             if (minutes + minutesToAdvance >= 60) {
                 int hoursAdvanced = (minutes + minutesToAdvance) / 60;
@@ -138,10 +157,12 @@ public class TimeHandler : MonoBehaviour
         }
 
         public void AdvanceDay() {
-            if (++day > 7) {
+            if (++day % 8 == 0) { // 7 = Saturday, n*8 = new weeks/Sunday
                 week++;
                 weekday = Days.Sunday;
             }
+
+            weekday = (Days)(day % 7);
 
             if (day % 365 == 0) {
                 year++;
@@ -169,6 +190,18 @@ public class TimeHandler : MonoBehaviour
 
             // HH:MM(AM|PM)
             return $"{standardHour:D2}:{minutes:D2}{period}";
+        }
+        #endregion
+
+        #region enums
+        public enum Days {
+            Sunday = 1,
+            Monday = 2,
+            Tuesday = 3,
+            Wednesday = 4,
+            Thursday = 5,
+            Friday = 6,
+            Saturday = 7
         }
         #endregion
     }

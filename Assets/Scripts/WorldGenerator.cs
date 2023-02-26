@@ -93,11 +93,11 @@ public class WorldGenerator : MonoBehaviour {
                     switch (resource.Item1) {
                         case CollectibleType.Nutrients:
                             // Instantiates the new resource and adds it to the list of rendered room props for the current room.
-                            renderedRoomProps[currentRoom].Add(Instantiate(nutrients, new Vector3(resource.Item2, 0, resource.Item3), new Quaternion(0, 180, 0, 0)));
+                            renderedRoomProps[currentRoom].Add(Instantiate(nutrients, new Vector3(resource.Item2, 0.4f, resource.Item3), new Quaternion(0, 180, 60, 0)));
                             break;
                         case CollectibleType.Water:
                             // Instantiates the new resource and adds it to the list of rendered room props for the current room.
-                            renderedRoomProps[currentRoom].Add(Instantiate(water, new Vector3(resource.Item2, 0, resource.Item3), new Quaternion(0, 180, 0, 0)));
+                            renderedRoomProps[currentRoom].Add(Instantiate(water, new Vector3(resource.Item2, 0, resource.Item3), new Quaternion(0, 180, 60, 0)));
                             break;
                     }
                 }

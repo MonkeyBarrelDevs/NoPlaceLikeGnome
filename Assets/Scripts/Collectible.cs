@@ -19,7 +19,7 @@ public class Collectible : MonoBehaviour
 
      void FindReferences()
     {
-        gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+        //gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
     }
 
      // Start is called before the first frame update
